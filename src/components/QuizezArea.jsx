@@ -61,24 +61,24 @@ const QuizezArea = () => {
               }}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.98 }}
-              className="w-full max-w-md bg-gradient-to-br from-orange-500 via-white to-black hover:from-orange-400 hover:to-gray-800 rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-shadow duration-300 cursor-pointer transform hover:scale-105"
+              className="w-full max-w-md bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-shadow duration-300 cursor-pointer transform hover:scale-105"
               onClick={() => handleQuizClick(quiz)}
             >
               <div className="p-6">
-                <h3 className="text-3xl font-extrabold text-center text-transparent bg-clip-text bg-gradient-to-r from-orange-600 via-white to-black bg-[length:200%_auto] animate-gradient-shine mb-4">
+                <h3 className="text-3xl font-bold text-center text-black mb-4">
                   {quiz.title}
                 </h3>
                 <p className="text-center text-gray-800 text-lg">
                   {quiz.questions.length} Questions
                 </p>
-                <p className="text-center text-gray-700 mt-3 mb-5 text-sm">
+                <p className="text-center text-gray-600 mt-3 mb-5 text-sm">
                   Test your knowledge and improve your skills.
                 </p>
                 <div className="flex justify-center">
                   <motion.button
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.95 }}
-                    className="bg-orange-600 text-white text-lg font-semibold py-2 px-6 rounded-full shadow-md hover:bg-orange-500 transition duration-300"
+                    className="bg-orange-600 text-white text-lg font-semibold py-2 px-6 rounded-full shadow-md hover:bg-black hover:text-orange-500 transition duration-300"
                   >
                     Start Quiz
                   </motion.button>
