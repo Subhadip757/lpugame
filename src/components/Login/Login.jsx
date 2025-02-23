@@ -1,133 +1,147 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 
-const Login = () => {
+const Login = ({ setUserRole }) => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [isShaking, setIsShaking] = useState(false);
+  const [isTeacherLogin, setIsTeacherLogin] = useState(false);
 
-  // Dummy credentials for Student
+  // Dummy credentials for Student & Teacher
   const credentials = {
-    student: {
-      email: "student@example.com",
-      password: "student123",
-    },
+    student: [
+      { id: "s1", email: "student@example.com", password: "student123" },
+      { id: "s2", email: "subhadip@gmail.com", password: "abc123" },
+      { id: "s3", email: "nilot@gmail.com", password: "nit123" },
+    ],
+    teacher: [
+      { id: "t1", email: "teacher@example.com", password: "teacher123" },
+      { id: "t2", email: "admin@gmail.com", password: "admin123" },
+    ],
   };
 
-  // Handle form submission and authentication
   const handleSubmit = (e) => {
     e.preventDefault();
+    const role = isTeacherLogin ? "teacher" : "student";
+    const userList = credentials[role];
 
-    // Student Login
-    if (
-      email === credentials.student.email &&
-      password === credentials.student.password
-    ) {
-      localStorage.setItem("userRole", "student");
-      navigate("/student-dashboard");
+    const user = userList.find(
+      (u) => u.email === email && u.password === password
+    );
+
+    if (user) {
+      localStorage.setItem("userRole", role);
+      localStorage.setItem("userID", user.id); // ✅ Store user ID
+      localStorage.setItem("studentEmail", isTeacherLogin ? "" : email); // Store student email
+      navigate(
+        role === "teacher"
+          ? `/teacher-dashboard/${user.id}`
+          : `/student-dashboard/${user.id}`
+      );
     } else {
       setError("Invalid email or password. Please try again.");
+      setIsShaking(true);
+      setTimeout(() => setIsShaking(false), 500);
     }
   };
-
-  // Handle input change and hide error if input is empty
-  const handleEmailChange = (e) => {
-    setEmail(e.target.value);
-
-    // Clear error if input becomes empty
-    if (e.target.value === "" || password === "") {
-      setError("");
-    }
-  };
-
-  const handlePasswordChange = (e) => {
-    setPassword(e.target.value);
-
-    // Clear error if input becomes empty
-    if (e.target.value === "" || email === "") {
-      setError("");
-    }
-  };
-
   return (
-    <div
-      className="min-h-screen flex items-center justify-center bg-cover bg-center relative"
-      style={{
-        backgroundImage:
-          "url('https://images.unsplash.com/photo-1682687218982-6c508299e107?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTV8fHNjZW5lcnklMjBiYWNrZ29ydW5kJTIwY2FydG9vbnxlbnwwfHwwfHx8MA%3D%3D')",
-      }}
-    >
-      {/* Overlay for better text visibility */}
-      <div className="absolute inset-0 bg-black opacity-50"></div>
+    <div className="min-h-screen flex items-center justify-center bg-gray-900 relative overflow-hidden">
+      {/* Background animation */}
+      <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 opacity-40 animate-pulse"></div>
 
-      <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full relative z-10">
+      {/* Login Card */}
+      <motion.div
+        animate={isShaking ? { x: [-10, 10, -10, 10, 0] } : {}}
+        transition={{ duration: 0.5 }}
+        className="relative bg-white rounded-2xl shadow-xl p-8 w-full max-w-md z-10"
+      >
         <div className="text-center">
-          <img
-            alt="Your Company"
-            src="https://upload.wikimedia.org/wikipedia/en/3/3a/Lovely_Professional_University_logo.png"
-            className="mx-auto h-12 w-auto"
-          />
-          <h2 className="mt-6 text-3xl font-extrabold tracking-tight text-black">
-            Sign in to your account
+          <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
+            {isTeacherLogin ? "Teacher Login" : "Student Login"}
           </h2>
+          <p className="text-gray-600">Sign in to continue</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6 mt-8">
-          <div>
-            <label
-              htmlFor="email"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Email address
-            </label>
-            <div className="mt-1">
+        {/* Animated Login Form */}
+        <AnimatePresence mode="wait">
+          <motion.form
+            key={isTeacherLogin ? "teacher" : "student"}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            onSubmit={handleSubmit}
+            className="space-y-6 mt-6"
+          >
+            {/* Email Input */}
+            <div className="relative">
+              <label className="block text-sm font-medium text-gray-700">
+                Email address
+              </label>
               <input
-                id="email"
-                name="email"
                 type="email"
                 value={email}
-                onChange={handleEmailChange} // Updated onChange
+                onChange={(e) => setEmail(e.target.value)}
                 required
-                autoComplete="email"
-                className="block w-full h-10 rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:text-sm"
+                className="w-full h-10 pl-3 rounded-md border border-gray-300 shadow-sm focus:ring-2 focus:ring-orange-500 focus:outline-none transition-all"
               />
             </div>
-          </div>
 
-          <div>
-            <label
-              htmlFor="password"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Password
-            </label>
-            <div className="mt-1">
+            {/* Password Input */}
+            <div className="relative">
+              <label className="block text-sm font-medium text-gray-700">
+                Password
+              </label>
               <input
-                id="password"
-                name="password"
                 type="password"
                 value={password}
-                onChange={handlePasswordChange} // Updated onChange
+                onChange={(e) => setPassword(e.target.value)}
                 required
-                autoComplete="current-password"
-                className="block w-full h-10 rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:text-sm"
+                className="w-full h-10 pl-3 rounded-md border border-gray-300 shadow-sm focus:ring-2 focus:ring-orange-500 focus:outline-none transition-all"
               />
             </div>
-          </div>
 
-          {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+            {/* Error Message */}
+            {error && (
+              <motion.p
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-red-500 text-sm text-center"
+              >
+                {error}
+              </motion.p>
+            )}
 
-          <div>
-            <button
+            {/* Login Button */}
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               type="submit"
-              className="w-full flex justify-center rounded-md bg-orange-500 px-4 py-2 text-sm font-semibold text-white shadow-md hover:bg-orange-600 transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="w-full py-2 bg-orange-500 text-white font-semibold rounded-md shadow-md hover:bg-orange-600 transition-all focus:outline-none focus:ring-2 focus:ring-orange-500"
             >
               Sign in
-            </button>
-          </div>
-        </form>
-      </div>
+            </motion.button>
+          </motion.form>
+        </AnimatePresence>
+
+        {/* Toggle Button */}
+        <p className="mt-4 text-center text-sm">
+          {isTeacherLogin ? "Switch to " : "Are you a Teacher? "}
+          <button
+            onClick={() => {
+              setIsTeacherLogin(!isTeacherLogin);
+              setError("");
+              setEmail("");
+              setPassword("");
+            }}
+            className="text-orange-500 font-semibold hover:underline"
+          >
+            {isTeacherLogin ? "Student Login" : "Teacher Login"}
+          </button>
+        </p>
+      </motion.div>
     </div>
   );
 };

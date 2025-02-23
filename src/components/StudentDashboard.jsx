@@ -1,15 +1,37 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import Navbar from "./Navbar";
 import QuizezArea from "./QuizezArea";
-import AnimatedText from "./AnimatedText"; // <-- Import the new component
+import AnimatedText from "./AnimatedText";
 
 const StudentDashboard = () => {
+  const navigate = useNavigate();
+  const { id } = useParams(); // Get student ID from URL
+
+  useEffect(() => {
+    // 🔍 Debugging: Log stored values
+    console.log("Checking authentication...");
+    const userRole = localStorage.getItem("userRole");
+    const storedID = localStorage.getItem("userID");
+    const email = localStorage.getItem("studentEmail");
+
+    console.log("Stored Role:", userRole);
+    console.log("Stored ID:", storedID);
+    console.log("URL ID:", id);
+
+    if (!storedID || !userRole || userRole !== "student" || storedID !== id) {
+      console.warn("🚨 Unauthorized access. Redirecting to login...");
+      navigate("/"); // Redirect if not authorized
+    }
+  }, [navigate, id]);
+
   return (
     <>
       <Navbar />
       <section className="min-h-screen bg-white p-8">
-        <AnimatedText /> {/* <-- Use it here */}
-        <QuizezArea />
+        <h1 className="text-3xl font-bold text-center">Welcome 🎉</h1>
+        <AnimatedText />
+        <QuizezArea studentID={id} />
       </section>
     </>
   );

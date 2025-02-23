@@ -1,48 +1,23 @@
 import React, { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import * as XLSX from "xlsx";
 
 const QuizezArea = () => {
   const [quizzes, setQuizzes] = useState([]);
   const navigate = useNavigate();
+  const studentID = localStorage.getItem("userID");
 
   useEffect(() => {
-    fetch("/quiz_data.xlsx")
-      .then((res) => res.arrayBuffer())
-      .then((buffer) => {
-        const workbook = XLSX.read(buffer, { type: "array" });
-        const sheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[sheetName];
-        const data = XLSX.utils.sheet_to_json(worksheet);
+    const storedTests = JSON.parse(localStorage.getItem("tests")) || [];
+    const studentQuizzes = storedTests.filter(
+      (quiz) => !quiz.assignedTo || quiz.assignedTo.includes(studentID)
+    );
+    setQuizzes(studentQuizzes);
+  }, [studentID]);
 
-        const groupedQuizzes = data.reduce((acc, row) => {
-          const title = row.Title;
-          if (!acc[title]) {
-            acc[title] = {
-              title,
-              questions: [],
-            };
-          }
-
-          acc[title].questions.push({
-            question: row.Question,
-            options: [row.Option1, row.Option2, row.Option3, row.Option4],
-            correctAnswer: row.CorrectAnswer,
-          });
-
-          return acc;
-        }, {});
-
-        const quizzesArray = Object.values(groupedQuizzes);
-        setQuizzes(quizzesArray);
-      })
-      .catch((err) => console.error("Error loading Excel file:", err));
-  }, []);
-
+  // Redirect to Quiz Authentication Page
   const handleQuizClick = (quiz) => {
-    localStorage.setItem("currentQuiz", JSON.stringify(quiz));
-    navigate(`/quiz-details/${quiz.title}`);
+    navigate(`/quiz-auth/${quiz.id}`);
   };
 
   return (
@@ -51,7 +26,7 @@ const QuizezArea = () => {
         <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 place-items-center">
           {quizzes.map((quiz, index) => (
             <motion.div
-              key={index}
+              key={quiz.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{
@@ -62,23 +37,24 @@ const QuizezArea = () => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.98 }}
               className="w-full max-w-md bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-shadow duration-300 cursor-pointer transform hover:scale-105"
-              onClick={() => handleQuizClick(quiz)}
             >
               <div className="p-6">
                 <h3 className="text-3xl font-bold text-center text-black mb-4">
-                  {quiz.title}
+                  {quiz.quizName}
                 </h3>
                 <p className="text-center text-gray-800 text-lg">
-                  {quiz.questions.length} Questions
+                  {quiz.numQuestions} Questions
                 </p>
                 <p className="text-center text-gray-600 mt-3 mb-5 text-sm">
-                  Test your knowledge and improve your skills.
+                  Negative Marking:{" "}
+                  <strong>{quiz.negativeMarking ? "Yes" : "No"}</strong>
                 </p>
                 <div className="flex justify-center">
                   <motion.button
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.95 }}
                     className="bg-orange-600 text-white text-lg font-semibold py-2 px-6 rounded-full shadow-md hover:bg-black hover:text-orange-500 transition duration-300"
+                    onClick={() => handleQuizClick(quiz)}
                   >
                     Start Quiz
                   </motion.button>
@@ -91,14 +67,8 @@ const QuizezArea = () => {
         <div className="text-center py-20">
           <h3 className="text-2xl text-gray-600">No Quizzes Available</h3>
           <p className="text-gray-500 mt-2">
-            Looks like there are no quizzes added yet.
+            Looks like there are no quizzes assigned to you.
           </p>
-          <Link
-            to="/add-quiz"
-            className="mt-6 inline-block bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-6 rounded-lg shadow-md transition duration-300"
-          >
-            Add New Quiz
-          </Link>
         </div>
       )}
     </section>

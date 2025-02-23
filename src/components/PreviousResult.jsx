@@ -6,41 +6,41 @@ const PreviousResults = () => {
   const [results, setResults] = useState([]);
   const navigate = useNavigate();
 
-  // Load results and check expiration
-  useEffect(() => {
-    const storedResults = JSON.parse(localStorage.getItem("quizResults")) || [];
+  // Get the logged-in student's ID (Example: stored in localStorage)
+  const studentID = localStorage.getItem("loggedInStudentID");
 
-    // Filter out expired results
+  useEffect(() => {
+    if (!studentID) return; // If no student is logged in, do nothing
+
+    // Get results for the specific student
+    const storedResults =
+      JSON.parse(localStorage.getItem(`quizResults_${studentID}`)) || [];
+
+    // Filter out expired results (older than 24 hours)
     const currentTime = Date.now();
     const updatedResults = storedResults.filter((result) => {
-      return currentTime - result.timestamp < 24 * 60 * 60 * 1000; // 24 hours
+      return currentTime - result.timestamp < 24 * 60 * 60 * 1000;
     });
 
     // Update localStorage with non-expired results
     if (updatedResults.length !== storedResults.length) {
-      localStorage.setItem("quizResults", JSON.stringify(updatedResults));
+      localStorage.setItem(
+        `quizResults_${studentID}`,
+        JSON.stringify(updatedResults)
+      );
     }
 
     setResults(updatedResults);
-  }, []);
+  }, [studentID]);
 
-  // Delete a specific result
-  const handleDeleteResult = (index) => {
-    if (window.confirm("Are you sure you want to delete this result?")) {
-      const updatedResults = results.filter((_, i) => i !== index);
-      setResults(updatedResults);
-      localStorage.setItem("quizResults", JSON.stringify(updatedResults));
-    }
-  };
-
-  // Navigate to Home
+  // Navigate to Student Dashboard
   const handleReturnHome = () => {
-    navigate("/");
+    navigate("/student-dashboard");
   };
 
   return (
     <section className="min-h-screen bg-gradient-to-br from-gray-900 to-orange-800 p-8">
-      {/* Return to Home Button with Enhanced Alignment and Animation */}
+      {/* Return to Dashboard Button */}
       <div className="flex justify-start mb-8">
         <motion.button
           onClick={handleReturnHome}
@@ -48,7 +48,7 @@ const PreviousResults = () => {
           whileTap={{ scale: 0.95 }}
           className="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-6 rounded-lg shadow-lg transition duration-300 ease-in-out transform hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-orange-400 focus:ring-opacity-50"
         >
-          Return to Home
+          Return to Dashboard
         </motion.button>
       </div>
 
@@ -83,13 +83,6 @@ const PreviousResults = () => {
                     <span className="font-semibold">Date:</span> {result.date}
                   </li>
                 </ul>
-
-                <button
-                  onClick={() => handleDeleteResult(index)}
-                  className="mt-4 bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg shadow-lg transition duration-300 ease-in-out"
-                >
-                  Delete
-                </button>
               </motion.li>
             ))}
           </ul>

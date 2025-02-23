@@ -19,10 +19,12 @@ const Navbar = () => {
                 initial={{ opacity: 0, x: -50 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.5 }}
-                whileHover={{ scale: 1.1 }}
-                className="text-transparent bg-clip-text bg-gradient-to-r from-orange-600 to-orange-800 text-3xl font-extrabold ml-3 tracking-widest hover:from-orange-700 hover:to-black transition-all duration-500"
+                whileHover={{ scale: 1.1, y: -5 }} // Bounce effect on hover
+                className="text-transparent bg-clip-text bg-gradient-to-r from-black to-orange-700 underline text-4xl font-extrabold ml-3 tracking-widest 
+             hover:from-gray-800 hover:to-black transition-all duration-500 
+             drop-shadow-[0_0_15px_rgba(255,255,255,0.8)] hover:drop-shadow-[0_0_25px_rgba(0,0,0,0.9)]"
               >
-                My Quiz App
+                LPU Gamification
               </motion.span>
             </Link>
           </div>

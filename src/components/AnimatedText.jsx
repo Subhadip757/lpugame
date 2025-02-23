@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 
 const AnimatedText = () => {
-  const words = ["Tests", "Quizes", "Games"];
+  const words = ["Tests", "Quizzes", "Games"];
   const [index, setIndex] = useState(0);
   const [subIndex, setSubIndex] = useState(0);
   const [isDeleting, setIsDeleting] = useState(false);
