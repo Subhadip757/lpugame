@@ -16,8 +16,10 @@ import ViewResults from "./components/ViewResults";
 import Login from "./components/Login/Login";
 
 export default function App() {
-  const [userRole, setUserRole] = useState(localStorage.getItem("userRole"));
-  const [userID, setUserID] = useState(localStorage.getItem("userID"));
+  const [userRole, setUserRole] = useState(
+    localStorage.getItem("userRole") || null
+  );
+  const [userID, setUserID] = useState(localStorage.getItem("userID") || null);
 
   // ✅ Watch for localStorage updates (for login/logout changes)
   useEffect(() => {
@@ -34,9 +36,7 @@ export default function App() {
 
   // ✅ Logout function (clears session)
   const handleLogout = () => {
-    localStorage.removeItem("userRole");
-    localStorage.removeItem("userID");
-    localStorage.removeItem("quizAccess"); // Reset quiz access
+    localStorage.clear();
     setUserRole(null);
     setUserID(null);
   };

@@ -4,28 +4,19 @@ import QuizManagement from "./QuizManagement";
 
 const TeacherDashboard = () => {
   const navigate = useNavigate();
-  const [tests, setTests] = useState([]);
+  const [tests, setTests] = useState(
+    JSON.parse(localStorage.getItem("tests")) || []
+  );
   const [quizDetails, setQuizDetails] = useState({
     quizName: "",
     numQuestions: "",
     password: "",
     negativeMarking: false,
   });
-  const [file, setFile] = useState(null);
   const [fileName, setFileName] = useState("");
 
-  // ✅ Load tests once, avoid repeated reads from localStorage
   useEffect(() => {
-    const savedTests = localStorage.getItem("tests");
-    if (savedTests) {
-      setTests(JSON.parse(savedTests));
-    }
-  }, []); // Empty dependency ensures it runs only once
-
-  // ✅ Redirect users if they are not teachers
-  useEffect(() => {
-    const userRole = localStorage.getItem("userRole");
-    if (userRole !== "teacher") {
+    if (localStorage.getItem("userRole") !== "teacher") {
       navigate("/");
     }
   }, [navigate]);
@@ -43,20 +34,18 @@ const TeacherDashboard = () => {
     }));
   };
 
-  // ✅ Fix: Handle file upload correctly
   const handleFileUpload = (event) => {
     const selectedFile = event.target.files[0];
-    if (!selectedFile) return;
-
-    const newFileName = `exams/${Date.now()}_${selectedFile.name}`;
-    setFile(selectedFile);
-    setFileName(newFileName);
+    if (selectedFile && selectedFile.name.endsWith(".xlsx")) {
+      setFileName(selectedFile.name);
+    } else {
+      alert("⚠️ Please upload a valid Excel file (.xlsx).");
+    }
   };
 
   const handleSubmit = () => {
-    const { quizName, numQuestions, password, negativeMarking } = quizDetails;
-
-    if (!file || !quizName || !numQuestions || !password) {
+    const { quizName, numQuestions, password } = quizDetails;
+    if (!quizName || !numQuestions || !password || !fileName) {
       alert("⚠️ Please fill all fields before uploading.");
       return;
     }
@@ -66,14 +55,12 @@ const TeacherDashboard = () => {
       quizName,
       numQuestions: parseInt(numQuestions, 10),
       password,
-      negativeMarking,
-      filePath: fileName, // ✅ Save only file path, not file object
+      negativeMarking: quizDetails.negativeMarking,
     };
 
     const updatedTests = [...tests, newTest];
     setTests(updatedTests);
     localStorage.setItem("tests", JSON.stringify(updatedTests));
-    alert(`✅ Quiz "${quizName}" uploaded successfully!`);
 
     setQuizDetails({
       quizName: "",
@@ -81,23 +68,21 @@ const TeacherDashboard = () => {
       password: "",
       negativeMarking: false,
     });
-    setFile(null);
     setFileName("");
+    alert("✅ Test uploaded successfully!");
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-500 to-blue-600 text-white p-6">
+    <div className="min-h-screen bg-gradient-to-br from-purple-600 to-blue-500 text-white p-6 relative">
       <button
         onClick={handleLogout}
-        className="absolute top-5 right-5 bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg"
+        className="absolute top-5 right-5 bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300"
       >
         🚪 Logout
       </button>
-
-      <h1 className="text-4xl font-bold text-center mb-6">
+      <h1 className="text-4xl font-extrabold text-center mb-6">
         📚 Teacher Dashboard
       </h1>
-
       <div className="bg-white text-gray-900 p-6 rounded-lg shadow-xl max-w-2xl mx-auto">
         <h2 className="text-2xl font-bold mb-4 text-center">
           Create a New Quiz
@@ -108,7 +93,7 @@ const TeacherDashboard = () => {
           placeholder="Quiz Name"
           value={quizDetails.quizName}
           onChange={handleInputChange}
-          className="w-full mb-3 p-3 border rounded-lg"
+          className="w-full mb-3 p-3 border rounded-lg focus:ring-2 focus:ring-purple-400"
         />
         <input
           type="number"
@@ -116,9 +101,8 @@ const TeacherDashboard = () => {
           placeholder="Number of Questions"
           value={quizDetails.numQuestions}
           onChange={handleInputChange}
-          className="w-full mb-3 p-3 border rounded-lg"
+          className="w-full mb-3 p-3 border rounded-lg focus:ring-2 focus:ring-purple-400"
         />
-
         <div className="mb-3">
           <label className="block text-gray-700 font-medium mb-2">
             Upload Excel File
@@ -132,16 +116,14 @@ const TeacherDashboard = () => {
             <p className="mt-2 text-sm text-gray-500">📄 {fileName}</p>
           )}
         </div>
-
         <input
           type="password"
           name="password"
           placeholder="Set test password"
           value={quizDetails.password}
           onChange={handleInputChange}
-          className="w-full mb-3 p-3 border rounded-lg"
+          className="w-full mb-3 p-3 border rounded-lg focus:ring-2 focus:ring-purple-400"
         />
-
         <div className="flex items-center mb-3">
           <input
             type="checkbox"
@@ -152,15 +134,13 @@ const TeacherDashboard = () => {
           />
           <label className="text-gray-700">Enable Negative Marking</label>
         </div>
-
         <button
           onClick={handleSubmit}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold p-3 rounded-lg transition-all duration-300 shadow-md"
+          className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold p-3 rounded-lg transition-all duration-300 shadow-md"
         >
           📤 Upload Test
         </button>
       </div>
-
       <QuizManagement />
     </div>
   );
