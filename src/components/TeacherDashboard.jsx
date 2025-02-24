@@ -13,7 +13,6 @@ const TeacherDashboard = () => {
     password: "",
     negativeMarking: false,
   });
-  const [fileName, setFileName] = useState("");
 
   useEffect(() => {
     if (localStorage.getItem("userRole") !== "teacher") {
@@ -34,19 +33,10 @@ const TeacherDashboard = () => {
     }));
   };
 
-  const handleFileUpload = (event) => {
-    const selectedFile = event.target.files[0];
-    if (selectedFile && selectedFile.name.endsWith(".xlsx")) {
-      setFileName(selectedFile.name);
-    } else {
-      alert("⚠️ Please upload a valid Excel file (.xlsx).");
-    }
-  };
-
   const handleSubmit = () => {
     const { quizName, numQuestions, password } = quizDetails;
-    if (!quizName || !numQuestions || !password || !fileName) {
-      alert("⚠️ Please fill all fields before uploading.");
+    if (!quizName || !numQuestions || !password) {
+      alert("⚠️ Please fill all fields before submitting.");
       return;
     }
 
@@ -68,8 +58,7 @@ const TeacherDashboard = () => {
       password: "",
       negativeMarking: false,
     });
-    setFileName("");
-    alert("✅ Test uploaded successfully!");
+    alert("✅ Test created successfully!");
   };
 
   return (
@@ -103,19 +92,6 @@ const TeacherDashboard = () => {
           onChange={handleInputChange}
           className="w-full mb-3 p-3 border rounded-lg focus:ring-2 focus:ring-purple-400"
         />
-        <div className="mb-3">
-          <label className="block text-gray-700 font-medium mb-2">
-            Upload Excel File
-          </label>
-          <input
-            type="file"
-            onChange={handleFileUpload}
-            className="w-full p-2 border rounded-lg cursor-pointer bg-gray-100"
-          />
-          {fileName && (
-            <p className="mt-2 text-sm text-gray-500">📄 {fileName}</p>
-          )}
-        </div>
         <input
           type="password"
           name="password"
@@ -138,7 +114,7 @@ const TeacherDashboard = () => {
           onClick={handleSubmit}
           className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold p-3 rounded-lg transition-all duration-300 shadow-md"
         >
-          📤 Upload Test
+          📤 Create Test
         </button>
       </div>
       <QuizManagement />
