@@ -2,7 +2,8 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 
-const Login = ({ setUserRole }) => {
+const Login = ({ setUserRole, setUserID }) => {
+  // ✅ Accept setUserID as a prop
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -10,32 +11,39 @@ const Login = ({ setUserRole }) => {
   const [isShaking, setIsShaking] = useState(false);
   const [isTeacherLogin, setIsTeacherLogin] = useState(false);
 
-  // Dummy credentials for Student & Teacher
+  // Dummy credentials stored in localStorage (for testing)
   const credentials = {
-    student: [
+    students: [
       { id: "s1", email: "student@example.com", password: "student123" },
       { id: "s2", email: "subhadip@gmail.com", password: "abc123" },
       { id: "s3", email: "nilot@gmail.com", password: "nit123" },
     ],
-    teacher: [
+    teachers: [
       { id: "t1", email: "teacher@example.com", password: "teacher123" },
       { id: "t2", email: "admin@gmail.com", password: "admin123" },
     ],
   };
 
+  // Handle login submission
   const handleSubmit = (e) => {
     e.preventDefault();
-    const role = isTeacherLogin ? "teacher" : "student";
-    const userList = credentials[role];
+    const role = isTeacherLogin ? "teacher" : "student"; // 🔹 Singular role string
+    const userList = credentials[role + "s"]; // Fetch from "students" or "teachers"
 
     const user = userList.find(
       (u) => u.email === email && u.password === password
     );
 
     if (user) {
+      // ✅ Store role and ID in localStorage
       localStorage.setItem("userRole", role);
-      localStorage.setItem("userID", user.id); // ✅ Store user ID
-      localStorage.setItem("studentEmail", isTeacherLogin ? "" : email); // Store student email
+      localStorage.setItem("userID", user.id);
+
+      // ✅ Set global state for real-time updates
+      setUserRole(role);
+      setUserID(user.id);
+
+      // ✅ Redirect to the correct dashboard
       navigate(
         role === "teacher"
           ? `/teacher-dashboard/${user.id}`
@@ -47,6 +55,7 @@ const Login = ({ setUserRole }) => {
       setTimeout(() => setIsShaking(false), 500);
     }
   };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-900 relative overflow-hidden">
       {/* Background animation */}

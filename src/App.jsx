@@ -5,24 +5,21 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
-
-import {
-  Login,
-  StudentDashboard,
-  TeacherDashboard,
-  Quiz,
-  PreviousResults,
-  QuizDetails,
-  QuizAuth,
-  QuizManagement,
-  ViewResults,
-} from "./components";
+import StudentDashboard from "./components/StudentDashboard";
+import TeacherDashboard from "./components/TeacherDashboard";
+import Quiz from "./components/Quiz";
+import PreviousResults from "./components/PreviousResult";
+import QuizDetails from "./components/QuizDetails";
+import QuizAuth from "./components/QuizAuth";
+import QuizManagement from "./components/QuizManagement";
+import ViewResults from "./components/ViewResults";
+import Login from "./components/Login/Login";
 
 export default function App() {
   const [userRole, setUserRole] = useState(localStorage.getItem("userRole"));
   const [userID, setUserID] = useState(localStorage.getItem("userID"));
 
-  // ✅ Watch for changes in localStorage (for login/logout)
+  // ✅ Watch for localStorage updates (for login/logout changes)
   useEffect(() => {
     const handleStorageChange = () => {
       setUserRole(localStorage.getItem("userRole"));
@@ -35,40 +32,49 @@ export default function App() {
     };
   }, []);
 
+  // ✅ Logout function (clears session)
+  const handleLogout = () => {
+    localStorage.removeItem("userRole");
+    localStorage.removeItem("userID");
+    localStorage.removeItem("quizAccess"); // Reset quiz access
+    setUserRole(null);
+    setUserID(null);
+  };
+
   return (
     <Router>
       <Routes>
-        {/* ✅ Default Route - Show Login First */}
+        {/* ✅ Default Route - Show Login Page */}
         <Route
           path="/"
           element={<Login setUserRole={setUserRole} setUserID={setUserID} />}
         />
 
-        {/* ✅ Student Dashboard */}
+        {/* ✅ Protected Student Dashboard Route */}
         <Route
           path="/student-dashboard/:id"
           element={
             userRole === "student" && userID ? (
-              <StudentDashboard />
+              <StudentDashboard onLogout={handleLogout} />
             ) : (
               <Navigate to="/" />
             )
           }
         />
 
-        {/* ✅ Teacher Dashboard */}
+        {/* ✅ Protected Teacher Dashboard Route */}
         <Route
           path="/teacher-dashboard/:id"
           element={
             userRole === "teacher" && userID ? (
-              <TeacherDashboard />
+              <TeacherDashboard onLogout={handleLogout} />
             ) : (
               <Navigate to="/" />
             )
           }
         />
 
-        {/* ✅ Other Routes */}
+        {/* ✅ Public Routes */}
         <Route path="/previous-results" element={<PreviousResults />} />
         <Route path="/quiz-details/:title" element={<QuizDetails />} />
         <Route path="/quiz-management" element={<QuizManagement />} />
@@ -77,7 +83,7 @@ export default function App() {
         {/* ✅ Quiz Password Authentication Route */}
         <Route path="/quiz-auth/:quizId" element={<QuizAuth />} />
 
-        {/* ✅ Protected Quiz Route (Only if password is entered) */}
+        {/* ✅ Protected Quiz Route (Ensures user has entered the correct password) */}
         <Route
           path="/quiz/:quizId"
           element={

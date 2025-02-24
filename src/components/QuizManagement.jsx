@@ -1,11 +1,21 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import * as XLSX from "xlsx";
+import QuizManagement from "./QuizManagement";
 
-const QuizManagement = () => {
+const TeacherDashboard = () => {
   const navigate = useNavigate();
   const [tests, setTests] = useState(
     JSON.parse(localStorage.getItem("tests")) || []
   );
+  const [quizDetails, setQuizDetails] = useState({
+    quizName: "",
+    numQuestions: "",
+    password: "",
+    negativeMarking: false,
+  });
+  const [file, setFile] = useState(null);
+  const [fileName, setFileName] = useState("");
 
   useEffect(() => {
     if (localStorage.getItem("userRole") !== "teacher") {
@@ -13,63 +23,179 @@ const QuizManagement = () => {
     }
   }, [navigate]);
 
-  // Function to delete a quiz
-  const handleDeleteQuiz = (quizId) => {
-    const updatedTests = tests.filter((test) => test.id !== quizId);
-    setTests(updatedTests);
-    localStorage.setItem("tests", JSON.stringify(updatedTests));
-    localStorage.removeItem(`quizData_${quizId}`); // Remove questions data
-    alert("🗑️ Quiz deleted successfully!");
+  const handleLogout = () => {
+    localStorage.removeItem("userRole");
+    navigate("/");
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setQuizDetails((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
+  };
+
+  const handleFileUpload = (event) => {
+    const selectedFile = event.target.files[0];
+    if (!selectedFile) return;
+
+    setFile(selectedFile);
+    setFileName(selectedFile.name);
+  };
+
+  const handleSubmit = () => {
+    const { quizName, numQuestions, password, negativeMarking } = quizDetails;
+
+    if (!file || !quizName || !numQuestions || !password) {
+      alert("⚠️ Please fill all fields before uploading.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const data = new Uint8Array(event.target.result);
+      const workbook = XLSX.read(data, { type: "array" });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const rawData = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+
+      if (rawData.length < 2) {
+        alert("⚠️ Invalid file format. Ensure the correct structure.");
+        return;
+      }
+
+      const parsedQuestions = rawData
+        .slice(1)
+        .map((row, index) => {
+          if (row.length < 7) return null;
+          return {
+            id: index + 1,
+            question: row[1],
+            options: {
+              a: row[2],
+              b: row[3],
+              c: row[4],
+              d: row[5],
+            },
+            correctAnswer: row[6].trim().toLowerCase(),
+          };
+        })
+        .filter(Boolean);
+
+      if (parsedQuestions.length < numQuestions) {
+        alert("⚠️ The uploaded file contains fewer questions than specified.");
+        return;
+      }
+
+      const newTest = {
+        id: Date.now().toString(),
+        quizName,
+        numQuestions: parseInt(numQuestions, 10),
+        password,
+        negativeMarking,
+        questions: parsedQuestions.slice(0, numQuestions),
+      };
+
+      const updatedTests = [...tests, newTest];
+      setTests(updatedTests);
+      localStorage.setItem("tests", JSON.stringify(updatedTests));
+      localStorage.setItem(
+        `quizData_${newTest.id}`,
+        JSON.stringify(newTest.questions)
+      );
+      alert(`✅ Quiz "${quizName}" uploaded successfully!`);
+
+      setQuizDetails({
+        quizName: "",
+        numQuestions: "",
+        password: "",
+        negativeMarking: false,
+      });
+      setFile(null);
+      setFileName("");
+    };
+    reader.readAsArrayBuffer(file);
   };
 
   return (
-    <div className="min-h-screen p-6 bg-gray-100 flex flex-col items-center mt-5">
-      <h1 className="text-3xl font-bold text-center mb-6">
-        📊 Quiz Management
+    <div className="min-h-screen bg-gradient-to-br from-indigo-500 to-blue-600 text-white p-6">
+      <button
+        onClick={handleLogout}
+        className="absolute top-5 right-5 bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg"
+      >
+        🚪 Logout
+      </button>
+
+      <h1 className="text-4xl font-bold text-center mb-6">
+        📚 Teacher Dashboard
       </h1>
 
-      {tests.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full max-w-6xl">
-          {tests.map((test) => (
-            <div
-              key={test.id}
-              className="bg-white p-4 rounded-lg shadow-md text-gray-900 transition-all duration-300 transform hover:scale-105 hover:shadow-xl min-h-[120px] flex flex-col justify-between"
-            >
-              <h3 className="text-lg font-semibold truncate">
-                {test.quizName}
-              </h3>
-              <p className="text-sm text-gray-600">
-                🔢 Questions: {test.numQuestions}
-              </p>
-              <p className="text-sm text-gray-600">
-                ⚖️ Negative Marking: {test.negativeMarking ? "Yes" : "No"}
-              </p>
-              <p className="text-sm text-gray-600">
-                🔑 Password: {test.password}
-              </p>
+      <div className="bg-white text-gray-900 p-6 rounded-lg shadow-xl max-w-2xl mx-auto">
+        <h2 className="text-2xl font-bold mb-4 text-center">
+          Create a New Quiz
+        </h2>
+        <input
+          type="text"
+          name="quizName"
+          placeholder="Quiz Name"
+          value={quizDetails.quizName}
+          onChange={handleInputChange}
+          className="w-full mb-3 p-3 border rounded-lg focus:ring-2 focus:ring-blue-400"
+        />
+        <input
+          type="number"
+          name="numQuestions"
+          placeholder="Number of Questions"
+          value={quizDetails.numQuestions}
+          onChange={handleInputChange}
+          className="w-full mb-3 p-3 border rounded-lg focus:ring-2 focus:ring-blue-400"
+        />
 
-              <div className="mt-3 flex flex-col gap-2">
-                <button
-                  onClick={() => navigate(`/view-results/${test.id}`)}
-                  className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-1 px-3 rounded-md text-sm transition"
-                >
-                  📊 View Results
-                </button>
-                <button
-                  onClick={() => handleDeleteQuiz(test.id)}
-                  className="bg-red-500 hover:bg-red-600 text-white font-medium py-1 px-3 rounded-md text-sm transition"
-                >
-                  🗑️ Delete Quiz
-                </button>
-              </div>
-            </div>
-          ))}
+        <div className="mb-3">
+          <label className="block text-gray-700 font-medium mb-2">
+            Upload Excel File
+          </label>
+          <input
+            type="file"
+            onChange={handleFileUpload}
+            className="w-full p-2 border rounded-lg cursor-pointer bg-gray-100"
+          />
+          {fileName && (
+            <p className="mt-2 text-sm text-gray-500">📄 {fileName}</p>
+          )}
         </div>
-      ) : (
-        <p className="text-center text-gray-500">No quizzes available.</p>
-      )}
+
+        <input
+          type="password"
+          name="password"
+          placeholder="Set test password"
+          value={quizDetails.password}
+          onChange={handleInputChange}
+          className="w-full mb-3 p-3 border rounded-lg focus:ring-2 focus:ring-blue-400"
+        />
+
+        <div className="flex items-center mb-3">
+          <input
+            type="checkbox"
+            name="negativeMarking"
+            checked={quizDetails.negativeMarking}
+            onChange={handleInputChange}
+            className="mr-2"
+          />
+          <label className="text-gray-700">Enable Negative Marking</label>
+        </div>
+
+        <button
+          onClick={handleSubmit}
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold p-3 rounded-lg transition-all duration-300 shadow-md"
+        >
+          📤 Upload Test
+        </button>
+      </div>
+
+      <QuizManagement />
     </div>
   );
 };
 
-export default QuizManagement;
+export default TeacherDashboard;

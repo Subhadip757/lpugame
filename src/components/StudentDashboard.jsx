@@ -9,11 +9,9 @@ const StudentDashboard = () => {
   const { id } = useParams(); // Get student ID from URL
 
   useEffect(() => {
-    // 🔍 Debugging: Log stored values
     console.log("Checking authentication...");
     const userRole = localStorage.getItem("userRole");
     const storedID = localStorage.getItem("userID");
-    const email = localStorage.getItem("studentEmail");
 
     console.log("Stored Role:", userRole);
     console.log("Stored ID:", storedID);
@@ -21,7 +19,7 @@ const StudentDashboard = () => {
 
     if (!storedID || !userRole || userRole !== "student" || storedID !== id) {
       console.warn("🚨 Unauthorized access. Redirecting to login...");
-      navigate("/"); // Redirect if not authorized
+      navigate("/"); // Redirect to login if not authorized
     }
   }, [navigate, id]);
 
