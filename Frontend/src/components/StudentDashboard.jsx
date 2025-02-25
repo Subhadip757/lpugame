@@ -10,8 +10,8 @@ const StudentDashboard = () => {
 
   useEffect(() => {
     console.log("Checking authentication...");
-    const userRole = localStorage.getItem("userRole");
-    const storedID = localStorage.getItem("userID");
+    const userRole = sessionStorage.getItem("userRole");
+    const storedID = sessionStorage.getItem("userID");
 
     console.log("Stored Role:", userRole);
     console.log("Stored ID:", storedID);
@@ -27,7 +27,6 @@ const StudentDashboard = () => {
     <>
       <Navbar />
       <section className="min-h-screen bg-white p-8">
-        <h1 className="text-3xl font-bold text-center">Welcome 🎉</h1>
         <AnimatedText />
         <QuizezArea studentID={id} />
       </section>

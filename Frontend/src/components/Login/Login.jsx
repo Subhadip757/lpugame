@@ -9,49 +9,52 @@ const Login = ({ setUserRole, setUserID }) => {
   const [error, setError] = useState("");
   const [isShaking, setIsShaking] = useState(false);
   const [isTeacherLogin, setIsTeacherLogin] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  // Dummy credentials stored in localStorage (for testing)
-  const credentials = {
-    students: [
-      { id: "s1", email: "student@example.com", password: "student123" },
-      { id: "s2", email: "subhadip@gmail.com", password: "abc123" },
-      { id: "s3", email: "nilot@gmail.com", password: "nit123" },
-    ],
-    teachers: [
-      { id: "t1", email: "teacher@example.com", password: "teacher123" },
-      { id: "t2", email: "admin@gmail.com", password: "admin123" },
-    ],
-  };
-
-  // Handle login submission
-  const handleSubmit = (e) => {
+  // ✅ Handle login submission
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const role = isTeacherLogin ? "teacher" : "student"; // 🔹 Singular role string
-    const userList = credentials[role + "s"]; // Fetch from "students" or "teachers"
+    setError("");
+    setLoading(true);
 
-    const user = userList.find(
-      (u) => u.email === email && u.password === password
-    );
+    const role = isTeacherLogin ? "teacher" : "student"; // Define role
 
-    if (user) {
-      // ✅ Store role and ID in localStorage
-      localStorage.setItem("userRole", role);
-      localStorage.setItem("userID", user.id);
+    try {
+      const response = await fetch("http://localhost:8000/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password, role }),
+      });
 
-      // ✅ Set global state for real-time updates
-      setUserRole(role);
-      setUserID(user.id);
+      const data = await response.json();
 
-      // ✅ Redirect to the correct dashboard
-      navigate(
-        role === "teacher"
-          ? `/teacher-dashboard/${user.id}`
-          : `/student-dashboard/${user.id}`
-      );
-    } else {
-      setError("Invalid email or password. Please try again.");
+      if (!response.ok) {
+        throw new Error(data.message || "Login failed");
+      }
+
+      // ✅ Store JWT token and user details
+      sessionStorage.setItem("token", data.token);
+      sessionStorage.setItem("userRole", data.user.role);
+      sessionStorage.setItem("userID", data.user.id);
+
+      // ✅ Update state in App.js
+      setUserRole(data.user.role);
+      setUserID(data.user.id);
+
+      // ✅ Redirect to dashboard
+      setTimeout(() => {
+        navigate(
+          data.user.role === "teacher"
+            ? `/teacher-dashboard/${data.user.id}`
+            : `/student-dashboard/${data.user.id}`
+        );
+      }, 500);
+    } catch (error) {
+      setError(error.message);
       setIsShaking(true);
       setTimeout(() => setIsShaking(false), 500);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -127,9 +130,10 @@ const Login = ({ setUserRole, setUserID }) => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               type="submit"
+              disabled={loading}
               className="w-full py-2 bg-orange-500 text-white font-semibold rounded-md shadow-md hover:bg-orange-600 transition-all focus:outline-none focus:ring-2 focus:ring-orange-500"
             >
-              Sign in
+              {loading ? "Signing in..." : "Sign in"}
             </motion.button>
           </motion.form>
         </AnimatePresence>
